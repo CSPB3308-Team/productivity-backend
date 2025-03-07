@@ -11,10 +11,12 @@ DOCKER_COMPOSE=docker-compose --env-file $(ENV_FILE) -f ./docker-compose.yml
 
 # Start containers
 up:
+	@echo "Creating your containers up..."
 	$(DOCKER_COMPOSE) up -d
 
 # Stop and remove containers
 down:
+	@echo "Stopping and removing your containers..."
 	$(DOCKER_COMPOSE) down
 
 # View logs
@@ -23,22 +25,27 @@ logs:
 
 # Start containers without rebuilding
 start:
+	@echo "Powering on your containers..."
 	$(DOCKER_COMPOSE) start && make logs
 
 # Stop containers
 stop:
+	@echo "Gracefully stopping your containers..."
 	$(DOCKER_COMPOSE) stop
 
 # Restart containers
 restart:
+	@echo "Restarting your existing containers..."
 	$(DOCKER_COMPOSE) restart
 
 # Rebuild containers
 rebuild:
+	@echo "Rebuilding your containers from the group up..."
 	$(DOCKER_COMPOSE) up --force-recreate --build --no-start
 
 # Remove all containers, networks, images, and volumes
 clean:
+	@echo "Removing your docker backend stack and cleaning images..."
 	$(DOCKER_COMPOSE) down --remove-orphans --rmi all -v
 
 # Start Flask in development mode (debug + hot reload)
@@ -68,11 +75,14 @@ upgrade:
 	docker exec -it flask_backend flask db upgrade
 
 seed:
+	@echo "Seeding docker database..."
 	docker exec -it flask_backend python -m app.seed
 
-# Run tests
+# Run tests inside Docker container using SQLite, will test any file with the name test_<something>.py
 test:
-	docker exec -it flask_backend pytest
+	@echo "Running unit tests inside Docker..."
+	docker exec -it flask_backend env PYTHONPATH=. APP_ENV=testing python3 -m unittest discover -s tests -p "test_*.py"
+
 
 #####################
 ## LOCAL COMMANDS ##
@@ -83,10 +93,12 @@ test:
 
 # Install dependencies (similar to a package.json)
 local-install:
+	@echo "Installing requirements.txt..."
 	pip install -r requirements.txt
 
 # Run Flask locally in development mode (hot reload)
 local-run:
+	@echo "Running the backend locally"
 	flask --app app --debug run
 
 # Enter Flask shell locally
@@ -101,12 +113,15 @@ local-migrate:
 
 # Apply the latest migrations to the database (Local)
 local-upgrade:
+	@echo "Applying local migrations..."
 	flask db upgrade
 
 # Seed database locally
 local-seed:
+	@echo "Seeding local database..."
 	python app/seed.py
 
 # Run tests locally
 local-test:
-	pytest
+	@echo "Running unit tests locally with SQLite..."
+	PYTHONPATH=. APP_ENV=testing python3 -m unittest discover -s tests -p "test_*.py"
