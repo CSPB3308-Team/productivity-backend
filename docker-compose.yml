@@ -5,7 +5,7 @@ services:
     restart: always
     env_file: .env
     ports:
-      - "5000:5000"
+      - "3308:3308"
     volumes:
       - .:/app
     environment:
@@ -15,9 +15,9 @@ services:
 # TO DO - fix the 'production' switch so that it works with production WSGI server
     command: >
       sh -c "if [ \"$FLASK_ENV\" = 'development' ]; then
-              flask run --host=0.0.0.0 --port=5000 --debug;
+              flask run --host=0.0.0.0 --port=3308 --debug;
             else
-              flask run --host=0.0.0.0 --port=5000;
+              flask run --host=0.0.0.0 --port=3308;
             fi"
 # This is our postgres database, the actual db
   db:
