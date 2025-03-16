@@ -2,6 +2,7 @@ import os
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
+from flask_cors import CORS
 from dotenv import load_dotenv
 
 # Load environment variables from .env
@@ -12,6 +13,7 @@ db = SQLAlchemy()
 
 def create_app():
     app = Flask(__name__)
+    CORS(app, origins=os.getenv("FRONTEND_URL"))
 
     # Read environment flag (default to "local" if not set)
     app_env = os.getenv("APP_ENV", "local").lower()
@@ -47,4 +49,4 @@ app = create_app()
 
 print(f"⚡ Running in {os.getenv('APP_ENV', 'local').upper()} mode")
 print(f"🔌 Connected to database: {app.config['SQLALCHEMY_DATABASE_URI']}")
-print(f"🌍 Running on http://0.0.0.0:{os.getenv('FLASK_RUN_PORT', '5000')}")
+print(f"🌍 Running on http://0.0.0.0:{os.getenv('FLASK_RUN_PORT', '3308')}")
