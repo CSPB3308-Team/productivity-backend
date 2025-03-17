@@ -4,13 +4,13 @@ from datetime import datetime, timedelta, timezone
 from app.models import Users, Tasks
 
 #### Helper Functions - used to make seeding in bulk easier #####
-# Create User Function - TO DO: Will need to be updated when user model changes
-def get_or_create_user(username, email):
+def get_or_create_user(username, email, first_name,last_name, password):
     # Query for the User
     user = Users.query.filter_by(username=username).first()
     # If Doesn't exist,
     if not user:
-        user = Users(username=username, email=email)
+        user = Users(username=username, email=email, first_name=first_name, last_name=last_name)
+        user.set_password(password)
         # Add it
         db.session.add(user)
         db.session.commit()
@@ -63,9 +63,9 @@ def seed_tasks(user):
 # Initialize
 with app.app_context():
     # Create 3 generic users
-    user1 = get_or_create_user("user1", "user1@mail.com")
-    user2 = get_or_create_user("user2", "user2@mail.com")
-    user3 = get_or_create_user("user3", "user3@mail.com")
+    user1 = get_or_create_user( "adam_addams123", "user1@mail.com", "Adam", "Addams","password1",)
+    user2 = get_or_create_user("bilbo_baggins420","user2@mail.com",  "Bilbo", "Baggins","password2")
+    user3 = get_or_create_user("bigcarlo69", "user3@mail.com", "Carlos", "Carmen","password3")
     # Seed them with the array of tasks
     seed_tasks(user1)
     seed_tasks(user2)

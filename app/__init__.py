@@ -13,7 +13,7 @@ db = SQLAlchemy()
 
 def create_app():
     app = Flask(__name__)
-    CORS(app, origins=os.getenv("FRONTEND_URL"))
+    CORS(app, origins=os.getenv("FRONTEND_URL"), supports_credentials=True)
 
     # Read environment flag (default to "local" if not set)
     app_env = os.getenv("APP_ENV", "local").lower()
