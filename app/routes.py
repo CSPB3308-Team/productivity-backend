@@ -57,7 +57,7 @@ def get_tasks():
         }
         for task in tasks
     ])
-# TO DO: Update, and delete
+
 #  Create a new task
 @main.route("/tasks", methods=["POST"])
 def create_task():
@@ -217,6 +217,3 @@ def login():
     })
     # Send token to frontend
     return jsonify({"token": token}), 200 
-
-# @main.route("/user", methods=["POST"])
-# def create_user():
