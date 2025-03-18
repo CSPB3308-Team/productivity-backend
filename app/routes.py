@@ -77,7 +77,7 @@ def create_task():
     required_fields = ["user_id", "task_name", "task_type", "due_date"]
     for field in required_fields:
         if field not in data:
-            return jsonify({"error": f"Missing required field: {field}"}), 400
+            return jsonify({"error": f"Missing required field: {field}"}), 400 # bad request
 
     # Extract data
     user_id = data["user_id"]
@@ -90,7 +90,7 @@ def create_task():
     # Check if user exists
     user = Users.query.get(user_id)
     if not user:
-        return jsonify({"error": "User not found"}), 404
+        return jsonify({"error": "User not found"}), 404 # not found!
 
     # Create a task
     new_task = Tasks(
@@ -132,13 +132,13 @@ def update_task():
 
     # If not, reject
     if not task_id:
-        return jsonify({"error": "Missing task field: id"}), 400
+        return jsonify({"error": "Missing task field: id"}), 400 # bad request
     
     # Check that its a valid id
     task = Tasks.query.get(task_id)
     # If not, reject
     if not task:
-        return jsonify({"error": "Task not found"}), 404
+        return jsonify({"error": "Task not found"}), 404 # not found
     
     # Extract data and update fields, if provided
     if "task_name" in data:
@@ -168,7 +168,7 @@ def update_task():
             "task_complete": task.task_complete,
             "task_type": task.task_type
         }
-    }), 200
+    }), 200 # status = OK
 
 # Delete Task
 @main.route("/tasks", methods=["DELETE"])
@@ -181,13 +181,13 @@ def delete_task():
 
     # If not, reject
     if not task_id:
-        return jsonify({"error": "Missing task field: id"}), 400
+        return jsonify({"error": "Missing task field: id"}), 400 # Bad request
     
     # Check that its a valid id
     task = Tasks.query.get(task_id)
     # If not, reject
     if not task:
-        return jsonify({"error": "Task not found"}), 404
+        return jsonify({"error": "Task not found"}), 404 # Not found
     
     # Delete task, if valid
     db.session.delete(task)
@@ -216,4 +216,4 @@ def login():
         "last_name": user.last_name
     })
     # Send token to frontend
-    return jsonify({"token": token}), 200 
+    return jsonify({"token": token}), 200 # OK
