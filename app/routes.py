@@ -57,8 +57,143 @@ def get_tasks():
         }
         for task in tasks
     ])
-# TO DO: Create, Update, and delete
+# TO DO: Update, and delete
+#  Create a new task
+@main.route("/tasks", methods=["POST"])
+def create_task():
+    """Creates a new task"""
+    data = request.json
 
+    # Validate, needs required fields
+    '''
+    This is the required info, will use defaults for the others: 
+    {
+        "user_id": 3,
+        "task_name": "Test missing info",
+        "task_type": "long-term",
+        "due_date": "2025-03-25"
+    }
+    '''
+    required_fields = ["user_id", "task_name", "task_type", "due_date"]
+    for field in required_fields:
+        if field not in data:
+            return jsonify({"error": f"Missing required field: {field}"}), 400
+
+    # Extract data
+    user_id = data["user_id"]
+    task_name = data["task_name"]
+    task_type = data["task_type"]
+    due_date = data.get("due_date")
+    task_renewed = data.get("task_renewed", False)  # default = false
+    task_complete = data.get("task_complete", False)  # default = False
+
+    # Check if user exists
+    user = Users.query.get(user_id)
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+
+    # Create a task
+    new_task = Tasks(
+        user_id=user_id,
+        task_name=task_name,
+        task_type=task_type,
+        due_date=due_date,
+        task_renewed=task_renewed,
+        task_complete=task_complete
+    )
+
+    # Add to adatabase
+    db.session.add(new_task)
+    db.session.commit()
+
+    # Success message
+    return jsonify({
+        "message": "Task created successfully",
+        "task": {
+            "id": new_task.id,
+            "user_id": new_task.user_id,
+            "task_name": new_task.task_name,
+            "created_date": new_task.created_date.isoformat(),
+            "due_date": new_task.due_date.isoformat() if new_task.due_date else None,
+            "task_renewed": new_task.task_renewed,
+            "task_complete": new_task.task_complete,
+            "task_type": new_task.task_type
+        }
+    }), 201
+
+# Update Task
+@main.route("/tasks", methods=["PUT", "PATCH"])
+def update_task():
+    """Updates an existing task"""
+    data = request.json
+
+    # Make sure the id was passed
+    task_id = data["id"]
+
+    # If not, reject
+    if not task_id:
+        return jsonify({"error": "Missing task field: id"}), 400
+    
+    # Check that its a valid id
+    task = Tasks.query.get(task_id)
+    # If not, reject
+    if not task:
+        return jsonify({"error": "Task not found"}), 404
+    
+    # Extract data and update fields, if provided
+    if "task_name" in data:
+        task.task_name = data["task_name"]
+    if "task_type" in data:
+        task.task_type = data["task_type"]
+    if "due_date" in data:
+        task.due_date = data["due_date"]
+    if "task_renewed" in data:
+        task.task_renewed = data["task_renewed"]
+    if "task_complete" in data:
+        task.task_complete = data["task_complete"]
+
+    # Commit to database
+    db.session.commit()
+
+    # Return the updated details
+    return jsonify({
+        "message": "Task updated successfully",
+        "task": {
+            "id": task.id,
+            "user_id": task.user_id,
+            "task_name": task.task_name,
+            "created_date": task.created_date.isoformat(),
+            "due_date": task.due_date.isoformat() if task.due_date else None,
+            "task_renewed": task.task_renewed,
+            "task_complete": task.task_complete,
+            "task_type": task.task_type
+        }
+    }), 200
+
+# Delete Task
+@main.route("/tasks", methods=["DELETE"])
+def delete_task():
+    """Updates an existing task"""
+    data = request.json
+
+    # Make sure the id was passed
+    task_id = data["id"]
+
+    # If not, reject
+    if not task_id:
+        return jsonify({"error": "Missing task field: id"}), 400
+    
+    # Check that its a valid id
+    task = Tasks.query.get(task_id)
+    # If not, reject
+    if not task:
+        return jsonify({"error": "Task not found"}), 404
+    
+    # Delete task, if valid
+    db.session.delete(task)
+    db.session.commit()
+
+    return jsonify({"message": "Task deleted successfully"}), 200  # OK
 
 #### USER ROUTES #####
 @main.route("/login", methods=["POST"])
@@ -82,3 +217,6 @@ def login():
     })
     # Send token to frontend
     return jsonify({"token": token}), 200 
+
+# @main.route("/user", methods=["POST"])
+# def create_user():
