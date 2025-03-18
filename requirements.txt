@@ -5,3 +5,5 @@ Flask-Migrate
 flask-cors
 psycopg2-binary
 python-dotenv
+bcrypt
+PyJWT

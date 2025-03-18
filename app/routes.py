@@ -1,9 +1,9 @@
 from flask import Blueprint, jsonify, request
 from app import db
-from app.models import Tasks
+from app.models import Tasks, Users
+from app.util import sign_token  # custom util import for auth
 
 main = Blueprint("main", __name__)
-
 # Test route, should just see the message and get a log
 @main.route("/")
 def home():
@@ -14,6 +14,7 @@ def home():
 @main.route("/tasks", methods=["GET"])
 # GET tasks
 def get_tasks():
+    """Returns tasks"""
     # Query Params - we can customize requests, add additional args here.
     user_id = request.args.get("user_id", type=int)
     task_complete = request.args.get("task_complete", type=bool)
@@ -57,3 +58,27 @@ def get_tasks():
         for task in tasks
     ])
 # TO DO: Create, Update, and delete
+
+
+#### USER ROUTES #####
+@main.route("/login", methods=["POST"])
+def login():
+    """Authenticate user, return json web token for login/logout/auth"""
+    data = request.json
+    email = data.get("email")
+    password = data.get("password")
+
+    user = Users.query.filter_by(email=email).first()
+    # Check password, decoded via bcrypt method on user
+    if not user or not user.check_password(password):
+        return jsonify({"error": "Invalid email or password"}), 401  # Unauthorized
+
+    # Generate JWT token with user info
+    token = sign_token({
+        "id": user.id,
+        "email": user.email,
+        "first_name": user.first_name,
+        "last_name": user.last_name
+    })
+    # Send token to frontend
+    return jsonify({"token": token}), 200 

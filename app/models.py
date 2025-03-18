@@ -1,14 +1,30 @@
 from app import db # db = SQLAlchemy instance from init app
 from datetime import datetime, timezone # used for dates
 from sqlalchemy.orm import relationship # needed for associations
+import bcrypt # encrypts strings, like password
 
-# Simple test model
-# TO DO: Modify users schema to match draft, but keep relation to `user.id` in task model
+
+# Users Model
 class Users(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
+    first_name = db.Column(db.String(80), nullable=False)
+    last_name = db.Column(db.String(80), nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
+    password_hash = db.Column(db.String(255), nullable=False) # we store password in a hash, see methods below
 
+    # Hash the given password and stores in db
+    def set_password(self,password):
+        salt = bcrypt.gensalt()
+        self.password_hash = bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
+
+    # Check the given password with stored, returns true or false
+    def check_password(self, password):
+        return bcrypt.checkpw(password.encode(), self.password_hash.encode())
+
+    def __repr__(self):
+        return f"<User email: {self.email} - Username: {self.username}>"
+    
 # Tasks Model
 class Tasks(db.Model):
     id = db.Column(db.Integer, primary_key=True)
