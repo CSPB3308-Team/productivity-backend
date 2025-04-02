@@ -239,7 +239,7 @@ def signup():
     password = data.get("password")
 
     # See if user exists
-    user = Users.query.filter_by(username=username).first()
+    user = Users.query.filter_by(email=email).first()
     # Create or return conflict
     if not user:
         user = Users(username=username, email=email, first_name=first_name, last_name=last_name)
@@ -250,9 +250,9 @@ def signup():
         print(f"User '{username}' created!")
     else:
         # Conflict message
-        print(f"User '{username}' already exists.")
+        print(f"User '{email}' already exists.")
         return jsonify({
-            "message": f"User '{username}' already exists.",
+            "message": f"User with email '{email}' already exists.",
         }), 409
         # Success message
     return jsonify({
