@@ -257,7 +257,7 @@ def signup():
         # Success message
     return jsonify({
         "message": "User created successfully",
-        "task": {
+        "user": {
             "id": user.id,
             "username": user.username,
             "email": user.email,
@@ -301,7 +301,7 @@ def update_user():
     # Return new info
     return jsonify({
         "message": "User updated successfully",
-        "task": {
+        "user": {
             "id": user.id,
             "username": user.username,
             "email": user.email,
