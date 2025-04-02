@@ -222,6 +222,7 @@ def login():
 # Create new user
 @main.route("/signup", methods =["POST"])
 def signup():
+    """Creates a new user"""
     data = request.json
     required_fields = ["username", "first_name", "last_name", "email", "password"]
 
@@ -266,9 +267,10 @@ def signup():
         }
     }), 201
 
-
+# Update a User
 @main.route("/user", methods=["PUT", "PATCH"])
 def update_user():
+    """Updates an existing user"""
     # First check that its authorized user
     token = verify_token()
     if not token:
@@ -278,7 +280,7 @@ def update_user():
     user_id = token.get("id")
     user = Users.query.get(user_id)
     if not user:
-        return jsonify({"error": "User not found"}), 404
+        return jsonify({"error": "User not found"}), 400
     
     # If valid token and user, proceed
     data = request.json
@@ -309,32 +311,23 @@ def update_user():
         }
     }), 200 # status = OK
 
-
-'''
-
-    id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(80), unique=True, nullable=False)
-    first_name = db.Column(db.String(80), nullable=False)
-    last_name = db.Column(db.String(80), nullable=False)
-    email = db.Column(db.String(120), unique=True, nullable=False)
-    password_hash = db.Column(db.String(255), nullable=False)
-
-
-def get_or_create_user(username, email, first_name,last_name, password):
-    # Query for the User
-    user = Users.query.filter_by(username=username).first()
-    # If Doesn't exist,
+# Delete a User
+@main.route("/user", methods=["DELETE"])
+def delete_user():
+    """Deletes an existing user"""
+    # First check that its authorized user
+    token = verify_token()
+    if not token:
+        return jsonify({"error": "Unauthorized or invalid token"}), 401
+    
+    # Check if user still exists
+    user_id = token.get("id")
+    user = Users.query.get(user_id)
     if not user:
-        user = Users(username=username, email=email, first_name=first_name, last_name=last_name)
-        user.set_password(password)
-        # Add it
-        db.session.add(user)
-        db.session.commit()
-        print(f"User '{username}' created!")
-    else:
-        print(f"User '{username}' already exists.")
-    return user
+        return jsonify({"error": "User not found"}), 400
+    
+    # Delete user, if valid
+    db.session.delete(user)
+    db.session.commit()
 
-
-
-'''
+    return jsonify({"message": "User deleted successfully"}), 200
