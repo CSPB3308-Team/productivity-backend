@@ -196,6 +196,7 @@ def delete_task():
     return jsonify({"message": "Task deleted successfully"}), 200  # OK
 
 #### USER ROUTES #####
+# Login
 @main.route("/login", methods=["POST"])
 def login():
     """Authenticate user, return json web token for login/logout/auth"""
@@ -217,3 +218,79 @@ def login():
     })
     # Send token to frontend
     return jsonify({"token": token}), 200 # OK
+
+# Create new user
+@main.route("/signup", methods =["POST"])
+def signup():
+    data = request.json
+    required_fields = ["username", "first_name", "last_name", "email", "password"]
+
+    # Check to make sure everything is provided
+    for field in required_fields:
+        if field not in data:
+            return jsonify({"error": f"Missing required field: {field}"}), 400 # bad request
+
+    # Extract data
+    username = data["username"]
+    first_name = data["first_name"]
+    last_name = data["last_name"]
+    email = data.get("email")
+    password = data.get("password")
+
+    # See if user exists
+    user = Users.query.filter_by(username=username).first()
+    # Create or return conflict
+    if not user:
+        user = Users(username=username, email=email, first_name=first_name, last_name=last_name)
+        user.set_password(password)
+        # Add it
+        db.session.add(user)
+        db.session.commit()
+        print(f"User '{username}' created!")
+    else:
+        # Conflict message
+        print(f"User '{username}' already exists.")
+        return jsonify({
+            "message": f"User '{username}' already exists.",
+        }), 409
+        # Success message
+    return jsonify({
+        "message": "User created successfully",
+        "task": {
+            "id": user.id,
+            "username": user.username,
+            "email": user.email,
+            "first_name": user.first_name,
+            "last_name": user.last_name,
+            "password_hash": user.password_hash
+        }
+    }), 201
+
+'''
+
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(80), unique=True, nullable=False)
+    first_name = db.Column(db.String(80), nullable=False)
+    last_name = db.Column(db.String(80), nullable=False)
+    email = db.Column(db.String(120), unique=True, nullable=False)
+    password_hash = db.Column(db.String(255), nullable=False)
+
+
+def get_or_create_user(username, email, first_name,last_name, password):
+    # Query for the User
+    user = Users.query.filter_by(username=username).first()
+    # If Doesn't exist,
+    if not user:
+        user = Users(username=username, email=email, first_name=first_name, last_name=last_name)
+        user.set_password(password)
+        # Add it
+        db.session.add(user)
+        db.session.commit()
+        print(f"User '{username}' created!")
+    else:
+        print(f"User '{username}' already exists.")
+    return user
+
+
+
+'''
