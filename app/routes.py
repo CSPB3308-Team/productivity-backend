@@ -1,7 +1,7 @@
 from flask import Blueprint, jsonify, request
 from app import db
 from app.models import Tasks, Users
-from app.util import sign_token  # custom util import for auth
+from app.util import sign_token, verify_token  # custom util import for auth
 
 main = Blueprint("main", __name__)
 # Test route, should just see the message and get a log
@@ -265,6 +265,50 @@ def signup():
             "password_hash": user.password_hash
         }
     }), 201
+
+
+@main.route("/user", methods=["PUT", "PATCH"])
+def update_user():
+    # First check that its authorized user
+    token = verify_token()
+    if not token:
+        return jsonify({"error": "Unauthorized or invalid token"}), 401
+    
+    # Check if user still exists
+    user_id = token.get("id")
+    user = Users.query.get(user_id)
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+    
+    # If valid token and user, proceed
+    data = request.json
+    # Extract data and update fields, if provided
+    if "username" in data:
+        user.username = data["username"]
+    if "email" in data:
+        user.email = data["email"]
+    if "first_name" in data:
+        user.first_name = data["first_name"]
+    if "last_name" in data:
+        user.last_name = data["last_name"]
+    if "password" in data:
+        user.set_password(data["password"])
+
+    # Commit to database
+    db.session.commit()
+    # Return new info
+    return jsonify({
+        "message": "User updated successfully",
+        "task": {
+            "id": user.id,
+            "username": user.username,
+            "email": user.email,
+            "first_name": user.first_name,
+            "last_name": user.last_name,
+            "password_hash": user.password_hash
+        }
+    }), 200 # status = OK
+
 
 '''
 
