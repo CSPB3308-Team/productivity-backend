@@ -1,7 +1,7 @@
 from app import db, app # imports our sqlalchemy and our app instance
 from datetime import datetime, timedelta, timezone
 
-from app.models import Users, Tasks
+from app.models import Users, Tasks, CustomizationItems
 
 #### Helper Functions - used to make seeding in bulk easier #####
 def get_or_create_user(username, email, first_name,last_name, password):
@@ -60,6 +60,17 @@ def seed_tasks(user):
     else:
         print(f"Tasks for {user.username} already exist.")
 
+# Seeds some default items
+def seed_items(item_type, name, model_key, item_cost):
+    item = CustomizationItems.query.filter_by(name=name).first()
+    if not item:
+        item = CustomizationItems(item_type = item_type, name = name, model_key = model_key, item_cost = item_cost)
+        db.session.add(item)
+        db.session.commit()
+        print(f"Item '{name}' created | Type : '{item_type} | Cost: '{item_cost}'")
+    else:
+        print(f"Item '{name}' exists")
+    return item
 # Initialize
 with app.app_context():
     # Create 3 generic users
@@ -70,3 +81,19 @@ with app.app_context():
     seed_tasks(user1)
     seed_tasks(user2)
     seed_tasks(user3)
+    # Seed the Items
+    # Seed Shirts
+    seed_items('shirt', 'Red Shirt', 'red_shirt', 100)
+    seed_items('shirt', 'Blue Shirt', 'blue_shirt', 100)
+    seed_items('shirt', 'Green Shirt', 'green_shirt', 100)
+    seed_items('shirt', 'Black Shirt', 'black_shirt', 250)
+    # Seed Shoes
+    seed_items('shoes', 'Red Shoes', 'red_shoes', 50)
+    seed_items('shoes', 'Blue Shoes', 'blue_shoes', 50)
+    seed_items('shoes', 'Green Shoes', 'green_shoes', 50)
+    seed_items('shoes', 'White Shoes', 'white_shoes', 100)
+    # Seed Skin
+    seed_items('skin', 'Yellow Skin', 'yellow_skin', 200)
+    seed_items('skin', 'Green Skin', 'green_skin', 200)
+    seed_items('skin', 'Blue Skin', 'blue_skin', 200)
+    seed_items('skin', 'Rainbow Skin', 'rainbow_skin', 500)
