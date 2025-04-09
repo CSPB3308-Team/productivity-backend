@@ -1,6 +1,7 @@
 from app import db # db = SQLAlchemy instance from init app
 from datetime import datetime, timezone # used for dates
-from sqlalchemy.orm import relationship, CheckConstraint # needed for associations
+from sqlalchemy.orm import relationship # needed for relationships
+from sqlalchemy import CheckConstraint
 import bcrypt # encrypts strings, like password
 
 
@@ -55,9 +56,9 @@ class Avatar(db.Model):
     shirt_id = db.Column(db.Integer, db.ForeignKey('customization_items.id'), nullable=True)
     shoes_id = db.Column(db.Integer, db.ForeignKey('customization_items.id'), nullable=True)
     # Relationship to CustomizationItem table
-    skin = relationship('CustomizationItem', foreign_keys=[skin_id])
-    shirt = relationship('CustomizationItem', foreign_keys=[shirt_id])
-    shoes = relationship('CustomizationItem', foreign_keys=[shoes_id])
+    skin = relationship('CustomizationItems', foreign_keys=[skin_id])
+    shirt = relationship('CustomizationItems', foreign_keys=[shirt_id])
+    shoes = relationship('CustomizationItems', foreign_keys=[shoes_id])
 
     # Relationship to Users model
     user = relationship('Users', backref=db.backref('avatar', lazy=True))
