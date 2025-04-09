@@ -1,7 +1,7 @@
 from flask import Blueprint, jsonify, request
 from app import db
 from app.models import Tasks, Users
-from app.util import sign_token  # custom util import for auth
+from app.util import sign_token, verify_token  # custom util import for auth
 
 main = Blueprint("main", __name__)
 # Test route, should just see the message and get a log
@@ -196,6 +196,7 @@ def delete_task():
     return jsonify({"message": "Task deleted successfully"}), 200  # OK
 
 #### USER ROUTES #####
+# Login
 @main.route("/login", methods=["POST"])
 def login():
     """Authenticate user, return json web token for login/logout/auth"""
@@ -217,3 +218,116 @@ def login():
     })
     # Send token to frontend
     return jsonify({"token": token}), 200 # OK
+
+# Create new user
+@main.route("/signup", methods =["POST"])
+def signup():
+    """Creates a new user"""
+    data = request.json
+    required_fields = ["username", "first_name", "last_name", "email", "password"]
+
+    # Check to make sure everything is provided
+    for field in required_fields:
+        if field not in data:
+            return jsonify({"error": f"Missing required field: {field}"}), 400 # bad request
+
+    # Extract data
+    username = data["username"]
+    first_name = data["first_name"]
+    last_name = data["last_name"]
+    email = data.get("email")
+    password = data.get("password")
+
+    # See if user exists
+    user = Users.query.filter_by(email=email).first()
+    # Create or return conflict
+    if not user:
+        user = Users(username=username, email=email, first_name=first_name, last_name=last_name)
+        user.set_password(password)
+        # Add it
+        db.session.add(user)
+        db.session.commit()
+        print(f"User '{username}' created!")
+    else:
+        # Conflict message
+        print(f"User '{email}' already exists.")
+        return jsonify({
+            "message": f"User with email '{email}' already exists.",
+        }), 409
+        # Success message
+    return jsonify({
+        "message": "User created successfully",
+        "user": {
+            "id": user.id,
+            "username": user.username,
+            "email": user.email,
+            "first_name": user.first_name,
+            "last_name": user.last_name,
+            "password_hash": user.password_hash
+        }
+    }), 201
+
+# Update a User
+@main.route("/user", methods=["PUT", "PATCH"])
+def update_user():
+    """Updates an existing user"""
+    # First check that its authorized user
+    token = verify_token()
+    if not token:
+        return jsonify({"error": "Unauthorized or invalid token"}), 401
+    
+    # Check if user still exists
+    user_id = token.get("id")
+    user = Users.query.get(user_id)
+    if not user:
+        return jsonify({"error": "User not found"}), 400
+    
+    # If valid token and user, proceed
+    data = request.json
+    # Extract data and update fields, if provided
+    if "username" in data:
+        user.username = data["username"]
+    if "email" in data:
+        user.email = data["email"]
+    if "first_name" in data:
+        user.first_name = data["first_name"]
+    if "last_name" in data:
+        user.last_name = data["last_name"]
+    if "password" in data:
+        user.set_password(data["password"])
+
+    # Commit to database
+    db.session.commit()
+    # Return new info
+    return jsonify({
+        "message": "User updated successfully",
+        "user": {
+            "id": user.id,
+            "username": user.username,
+            "email": user.email,
+            "first_name": user.first_name,
+            "last_name": user.last_name,
+            "password_hash": user.password_hash
+        }
+    }), 200 # status = OK
+
+# Delete a User
+@main.route("/user", methods=["DELETE"])
+def delete_user():
+    """Deletes an existing user"""
+    # First check that its authorized user
+    token = verify_token()
+    if not token:
+        return jsonify({"error": "Unauthorized or invalid token"}), 401
+    
+    # Check if user still exists
+    user_id = token.get("id")
+    user = Users.query.get(user_id)
+    if not user:
+        return jsonify({"error": "User not found"}), 400
+    
+    # Delete user, if valid
+    db.session.delete(user)
+    db.session.commit()
+
+    return jsonify({"message": "User deleted successfully"}), 200
