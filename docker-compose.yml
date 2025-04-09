@@ -12,7 +12,6 @@ services:
       - DOCKER=1
       - PYTHONUNBUFFERED=1
       - FLASK_ENV=${FLASK_ENV}  # Ensure the container knows its mode (dev / production)
-      - APP_ENV=docker
 # TO DO - fix the 'production' switch so that it works with production WSGI server
     command: >
       sh -c "if [ \"$FLASK_ENV\" = 'development' ]; then

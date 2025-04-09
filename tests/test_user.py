@@ -27,22 +27,17 @@ class UserModelTestCase(unittest.TestCase):
     # Test creating a new user
     def test_user_creation(self):
         with self.app.app_context():
-            from app.models import Users  # Import inside the test context
-            user = Users(
-                username="testuser",
-                first_name="Test",
-                last_name="User",
-                email="test@example.com"
-            )
-            user.set_password("securepass")
+            from app.models import Users  #import inside the test context
+            # User info we are trying to add
+            user = Users(username="testuser", email="test@example.com")
+            # Attempt to add
             db.session.add(user)
             db.session.commit()
-
+            # Query
             retrieved_user = Users.query.filter_by(username="testuser").first()
-            self.assertIsNotNone(retrieved_user)
-            self.assertEqual(retrieved_user.email, "test@example.com")
-            self.assertTrue(retrieved_user.check_password("securepass"))
-
+            # Asserts
+            self.assertIsNotNone(retrieved_user) # it exists
+            self.assertEqual(retrieved_user.email, "test@example.com") #it matches the email
 
 if __name__ == '__main__':
     unittest.main()

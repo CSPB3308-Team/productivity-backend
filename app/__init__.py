@@ -18,30 +18,18 @@ def create_app():
     # Read environment flag (default to "local" if not set)
     app_env = os.getenv("APP_ENV", "local").lower()
 
-    # Determine the correct database URL based on environment
-    if app_env == "testing":
+     # Switch between docker, testing, and local machine
+    if app_env == "docker":
+        database_url = os.getenv("DOCKER_DATABASE_URL", "postgresql://postgres:password@db:5432/postgres")
+    elif app_env == "testing":  # Use SQLite in-memory for testing
         database_url = "sqlite:///:memory:"
-    elif app_env == "docker":
-        database_url = (
-            f"postgresql://{os.getenv('POSTGRES_USER')}:{os.getenv('POSTGRES_PASSWORD')}"
-            f"@{os.getenv('DB_HOST')}:{os.getenv('DB_PORT')}/{os.getenv('POSTGRES_DB')}"
-        )
-    else:  # default to local
-        database_url = os.getenv(
-            "LOCAL_DATABASE_URL",
-            f"postgresql://{os.getenv('POSTGRES_USER', 'taskagotchi_user')}:" +
-            f"{os.getenv('POSTGRES_PASSWORD', 'taskagotchi_password')}@localhost:" +
-            f"{os.getenv('DB_PORT', '5432')}/{os.getenv('POSTGRES_DB', 'taskagotchi_db')}"
-        )
+    else:
+        database_url = os.getenv("LOCAL_DATABASE_URL", "postgresql://postgres:password@localhost:5432/taskagotchi")
 
     # Load database config
     app.config["SQLALCHEMY_DATABASE_URI"] = database_url
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
     app.config["TESTING"] = app_env == "testing"
-
-    # Debug info
-    print(f"✅ Running in {app_env.upper()} mode")
-    print(f"🔌 Connected to database: {database_url}")
 
     # Bind database to the app
     db.init_app(app)
@@ -56,9 +44,9 @@ def create_app():
 
     return app
 
-
 # Init app
 app = create_app()
 
 print(f"⚡ Running in {os.getenv('APP_ENV', 'local').upper()} mode")
 print(f"🔌 Connected to database: {app.config['SQLALCHEMY_DATABASE_URI']}")
+print(f"🌍 Running on http://0.0.0.0:{os.getenv('FLASK_RUN_PORT', '3308')}")
