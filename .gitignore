@@ -3,5 +3,5 @@ __pycache__
 venv/
 .vscode
 .mypy_cache
-.env.test
+# .env.test
 
