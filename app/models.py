@@ -1,6 +1,7 @@
 from app import db # db = SQLAlchemy instance from init app
 from datetime import datetime, timezone # used for dates
-from sqlalchemy.orm import relationship # needed for associations
+from sqlalchemy.orm import relationship # needed for relationships
+from sqlalchemy import CheckConstraint
 import bcrypt # encrypts strings, like password
 
 
@@ -42,4 +43,43 @@ class Tasks(db.Model):
     user = relationship('Users', backref=db.backref('tasks', lazy=True))
 
     def __repr__(self):
-        return f"<Task {self.task_name} - Due: {self.due_date} - Complete: {self.task_complete}>"
+        return f"<Task {self.task_name} - Due: {self.due_date} - Complete: {self.task_complete}>"    # 
+
+# Avatar Model
+class Avatar(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, unique=True)
+    avatar_name = db.Column(db.String(20), nullable=False)
+    avatar_energy = db.Column(db.Integer, default=100, nullable=False)
+    # Store references to the customization items table
+    skin_id = db.Column(db.Integer, db.ForeignKey('customization_items.id'), nullable=True)
+    shirt_id = db.Column(db.Integer, db.ForeignKey('customization_items.id'), nullable=True)
+    shoes_id = db.Column(db.Integer, db.ForeignKey('customization_items.id'), nullable=True)
+    # Relationship to CustomizationItem table
+    skin = relationship('CustomizationItems', foreign_keys=[skin_id])
+    shirt = relationship('CustomizationItems', foreign_keys=[shirt_id])
+    shoes = relationship('CustomizationItems', foreign_keys=[shoes_id])
+
+    # Relationship to Users model
+    user = relationship('Users', backref=db.backref('avatar', lazy=True))
+
+    # Keeps the Avatar energy between 0 - 100
+    __table_args__ = (
+        CheckConstraint('avatar_energy >= 0 AND avatar_energy <= 100', name='check_avatar_energy_range'),
+    )
+
+    def __repr__(self):
+        return f"<Avatar {self.avatar_name} - Owner: {self.user_id}>"
+    
+# Customization Items
+class CustomizationItems(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    item_type = db.Column(db.Enum('skin', 'shirt', 'shoes', name='customization_type_enum'), nullable=False)
+    name = db.Column(db.String(50), nullable=False)
+    item_cost = db.Column(db.Integer, nullable=False)
+
+    # This field is what the frontend will use to toggle something in 3D, maybe like a file name or something
+    model_key = db.Column(db.String(50), nullable=False)
+
+    def __repr__(self):
+        return f"<CustomizationItem {self.item_type} - {self.name}>"
