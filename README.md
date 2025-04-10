@@ -29,14 +29,15 @@ After you have your containers built, its time to start. Go ahead and fire the c
 Once your containers are up and running, you need to set up the database schema by applying migrations. Migrations allow you to track and update database structure changes over time. `Migrate` and `Upgrade` make scripts are used to manage database / schema changes.
 
 #### Database Sync: First-Time Setup
-If this is your first time setting up the database, you need to create and apply initial migrations by running the following commands:
-- `make migrate`
+If this is your first time setting up the database, you need to apply existing migrations by running the following commands:
 - `make upgrade`
 
 #### Database Sync: Adding New Features
 If you make changes to your models (e.g., adding a column or modifying a table), you also need to:
 - `make migrate`
 - `make upgrade`
+
+And then commit the new migration file, will show up under `migrations/versions/<some-uuid-auto-migration>.py`
 
 #### Database Sync: If Someone Else Pushes a New Migration?
 If a teammate updates the database schema and commits a new migration file (will show up under `migrations/versions/<some-uuid-auto-migration>.py`), you only need to run `make upgrade`. This will sync your local database with the latest schema.
@@ -77,3 +78,57 @@ You will also need [Postgres](https://www.postgresql.org/) installed. [pgAdmin](
 ### Local Initialization
 `make local-install` to use the `requirements.txt` like a package.json to install all the modules on your local virtual enviroment. 
 
+--- 
+--- 
+
+## Testing
+Our backend uses a temporary, in-memory Sqlite database for testing to ensure all the Models, utils, and methods work as expected.
+
+### How to Run Tests
+You can run tests in Docker via `make test` or on your local machine using `make local-test`. This will automatically run any file in the `/tests` directory with the following format `test_*.py` using unittest. 
+
+### Making a New Test
+To use the temporary testing sqlite database -- in your test class, you will just need to include the following methods (`setUp()` and `tearDown()`) which will automatically build and then tear down the database to run tests.
+
+Then simply write functional tests with assert statements within that class, following documentation: https://docs.python.org/3/library/unittest.html#assert-methods
+
+```
+import unittest
+import os
+from app import create_app, db
+
+# Class for <someModel> testings
+class <someModel>TestCase(unittest.TestCase):
+    def setUp(self):
+        # Sets up testing db
+        self.app = create_app()
+
+        # Override database for testing, force in memory sqlite3
+        self.app.config['SQLALCHEMY_DATABASE_URI'] = "sqlite:///:memory:"
+        self.app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+        self.app.config['TESTING'] = True
+
+        self.client = self.app.test_client()
+
+        with self.app.app_context():
+            db.create_all() # run the schema (migrations)
+
+    # After each test, tear it down
+    def tearDown(self):
+        with self.app.app_context():
+            db.session.remove()
+            db.drop_all()
+
+# Sample test format
+    def test_<someModel>_creation(self):
+        with self.app.app_context():
+        # Some logic
+        ...
+        # Asserts
+         self.assertIsNotNone(something)
+         self.assetEqual(something, something-else)
+        ...
+
+
+    ... other tests below
+```
