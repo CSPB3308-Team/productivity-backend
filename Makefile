@@ -79,9 +79,15 @@ seed:
 	docker exec -it flask_backend python -m app.seed
 
 # Run tests inside Docker container using SQLite, will test any file with the name test_<something>.py
+# test:
+# 	@echo "Running unit tests inside Docker..."
+# 	docker exec -it flask_backend env PYTHONPATH=. APP_ENV=testing python3 -m unittest discover -s tests -p "test_*.py"
+
 test:
-	@echo "Running unit tests inside Docker..."
-	docker exec -it flask_backend env PYTHONPATH=. APP_ENV=testing python3 -m unittest discover -s tests -p "test_*.py"
+	@echo "Running unit tests inside Docker using pytest..."
+	docker exec -it flask_backend env PYTHONPATH=. APP_ENV=testing pytest -v tests
+
+
 
 
 #####################

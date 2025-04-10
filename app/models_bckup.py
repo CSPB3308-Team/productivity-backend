@@ -3,7 +3,12 @@ from datetime import datetime, timezone # used for dates
 from sqlalchemy.orm import relationship # needed for associations
 import bcrypt # encrypts strings, like password
 
+from datetime import datetime, timezone # used for dates
+from sqlalchemy.orm import relationship # needed for associations
+import bcrypt # encrypts strings, like password
 
+
+# Users Model
 # Users Model
 class Users(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -43,9 +48,3 @@ class Tasks(db.Model):
 
     def __repr__(self):
         return f"<Task {self.task_name} - Due: {self.due_date} - Complete: {self.task_complete}>"
-    
-    # added JG 2025-04-10
-    def __init__(self, *args, **kwargs):
-        super(Tasks, self).__init__(*args, **kwargs)
-        if not self.task_name or self.task_name.strip() == "":
-            raise ValueError("Task name cannot be empty.")

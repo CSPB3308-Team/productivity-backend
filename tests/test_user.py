@@ -4,9 +4,9 @@ from app.models import Users
 
 class UserModelTestCase(unittest.TestCase):
     def setUp(self):
-        self.app = create_app()
+        self.app = create_app()  # No need to pass config_name here
         self.app.config["TESTING"] = True
-        self.app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///:memory:"
+        self.app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///:memory:"  # Use in-memory DB for testing
         self.app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
         self.client = self.app.test_client()
 
@@ -37,6 +37,10 @@ class UserModelTestCase(unittest.TestCase):
             self.assertTrue(retrieved_user.check_password("securepass"))
             self.assertFalse(retrieved_user.check_password("wrongpass"))
 
+    # Add more tests as needed, e.g., test for duplicate email, etc.
+
 if __name__ == "__main__":
     unittest.main()
+
+
 

@@ -103,15 +103,17 @@ def test_empty_task_name(test_app):
         db.session.add(user)
         db.session.commit()
 
-        task = Tasks(
-            user_id=user.id,
-            task_name="",  # Empty task name
-            due_date=datetime.now(timezone.utc) + timedelta(days=3),
-            task_type="short-term"
-        )
-        db.session.add(task)
-        with pytest.raises(IntegrityError):
+        # Expecting ValueError since the task_name cannot be empty
+        with pytest.raises(ValueError, match="Task name cannot be empty."):
+            task = Tasks(
+                user_id=user.id,
+                task_name="",  # Empty task name
+                due_date=datetime.now(timezone.utc) + timedelta(days=3),
+                task_type="short-term"
+            )
+            db.session.add(task)
             db.session.commit()
+
 
 # Edge case: Task with due_date in the past
 def test_past_due_date(test_app):
@@ -136,7 +138,10 @@ def test_past_due_date(test_app):
         db.session.commit()
 
         saved_task = Tasks.query.first()
-        assert saved_task.due_date < datetime.now(timezone.utc)  # Task should have a due date in the past
+
+        # Ensure both datetimes are timezone-aware before comparison
+        assert saved_task.due_date.replace(tzinfo=timezone.utc) < datetime.now(timezone.utc)
+
 
 # Edge case: Invalid task type (rechecking task type constraints)
 def test_invalid_task_type(test_app):
@@ -163,6 +168,3 @@ def test_invalid_task_type(test_app):
         db.session.add(invalid_task)
         with pytest.raises(Exception):
             db.session.commit()
-
-
-
