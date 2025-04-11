@@ -125,3 +125,5 @@ local-seed:
 local-test:
 	@echo "Running unit tests locally with SQLite..."
 	PYTHONPATH=. APP_ENV=testing python3 -m unittest discover -s tests -p "test_*.py"
+
+
