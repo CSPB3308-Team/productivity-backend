@@ -1,6 +1,6 @@
 from flask import Blueprint, jsonify, request
 from app import db
-from app.models import Tasks, Users
+from app.models import Tasks, Users, Avatar, CustomizationItems
 from app.util import sign_token, verify_token  # custom util import for auth
 
 main = Blueprint("main", __name__)
@@ -326,6 +326,16 @@ def delete_user():
     if not user:
         return jsonify({"error": "User not found"}), 400
     
+    # Before we delete the User, we'll need to remove their content due to foreign key restraints
+
+    # Delete user's tasks
+    Tasks.query.filter_by(user_id=user_id).delete()
+
+    # Delete user's avatar
+    Avatar.query.filter_by(user_id=user_id).delete()
+
+    # TO DO : Delete user's items once transaction table is complete
+
     # Delete user, if valid
     db.session.delete(user)
     db.session.commit()
