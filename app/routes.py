@@ -298,6 +298,16 @@ def update_user():
 
     # Commit to database
     db.session.commit()
+
+    # Generate JWT with user info (so the frontend can update 
+    # localStorage without requiring a full logout and login)
+    token = sign_token({
+        "id": user.id,
+        "email": user.email,
+        "first_name": user.first_name,
+        "last_name": user.last_name
+    })
+
     # Return new info
     return jsonify({
         "message": "User updated successfully",
@@ -308,7 +318,8 @@ def update_user():
             "first_name": user.first_name,
             "last_name": user.last_name,
             "password_hash": user.password_hash
-        }
+        },
+        "token": token,
     }), 200 # status = OK
 
 # Delete a User
