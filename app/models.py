@@ -83,3 +83,19 @@ class CustomizationItems(db.Model):
 
     def __repr__(self):
         return f"<CustomizationItem {self.item_type} - {self.name}>"
+
+class Wallets(db.Model):
+    id = db.Column(db.Integer, primary_key = True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, unique=True)
+    balance = db.Column(db.Integer, default=0, nullable=False)
+
+    # Balance cannot be negative, >=0
+    __table_args__ = (
+        CheckConstraint('balance >= 0', name='check_balance_non_negative'),
+    )
+
+    # Relationship to Users model
+    user = relationship('Users', backref=db.backref('wallet', lazy=True))
+
+    def __repr__(self):
+        return f"<Wallet {self.id} for {self.user_id}>"

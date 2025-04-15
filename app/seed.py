@@ -1,7 +1,7 @@
 from app import db, app # imports our sqlalchemy and our app instance
 from datetime import datetime, timedelta, timezone
 
-from app.models import Users, Tasks, Avatar, CustomizationItems
+from app.models import Users, Tasks, Avatar, CustomizationItems, Wallets
 
 #### Helper Functions - used to make seeding in bulk easier #####
 def get_or_create_user(username, email, first_name,last_name, password):
@@ -83,6 +83,13 @@ def seed_avatar(user_id, avatar_name, skin_id, shirt_id, shoes_id):
     else:
         print(f"Avatar for User ID {user_id} odoes not exist." )
     return avatar
+def seed_wallets(user_id):
+    wallet = Wallets.query.filter_by(user_id = user_id).first()
+    if not wallet:
+        wallet = Wallets(user_id = user_id)
+        db.session.add(wallet)
+        db.session.commit()
+        print(f"Wallet for User ID {user_id}: {wallet.id} created! ")
 # Initialize
 with app.app_context():
     # Create 3 generic users
@@ -126,3 +133,8 @@ with app.app_context():
     seed_avatar(user1.id, "Adam Jr.", default_skin.id, default_shirt.id, default_shoes.id)
     seed_avatar(user2.id, "Frodo", default_skin.id, default_shirt.id, default_shoes.id)
     seed_avatar(user3.id, "Carlito", default_skin.id, default_shirt.id, default_shoes.id)
+
+    # Seed wallets to user
+    seed_wallets(user1.id)
+    seed_wallets(user2.id)
+    seed_wallets(user3.id)
