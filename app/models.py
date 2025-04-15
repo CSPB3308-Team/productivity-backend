@@ -99,3 +99,19 @@ class Wallets(db.Model):
 
     def __repr__(self):
         return f"<Wallet {self.id} for {self.user_id}>"
+
+class Transactions(db.Model):
+    id = db.Column(db.Integer, primary_key = True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    item_id = db.Column(db.Integer, db.ForeignKey('customization_items.id'), nullable=False)
+    # Relationship to Users model
+    user = relationship('Users', backref=db.backref('transactions', lazy=True))
+    item = relationship('CustomizationItems', backref=db.backref('transactions', lazy=True))
+
+    # Constraint, can't have multiple of the same item
+    __table_args__ = (
+        db.UniqueConstraint('user_id', 'item_id', name='uq_user_item_once'),
+    )
+
+    def __repr__(self):
+        return f"<Transaction #{self.id} for {self.user_id} | Purchased Item: {self.item_id}>"

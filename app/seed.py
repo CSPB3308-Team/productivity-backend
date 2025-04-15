@@ -81,12 +81,12 @@ def seed_avatar(user_id, avatar_name, skin_id, shirt_id, shoes_id):
         db.session.commit()
         print(f"Avatar for User ID {user_id}: {avatar_name} created! ")
     else:
-        print(f"Avatar for User ID {user_id} odoes not exist." )
+        print(f"Avatar for User ID {user_id} does not exist." )
     return avatar
 def seed_wallets(user_id):
     wallet = Wallets.query.filter_by(user_id = user_id).first()
     if not wallet:
-        wallet = Wallets(user_id = user_id)
+        wallet = Wallets(user_id = user_id, balance = 9000)
         db.session.add(wallet)
         db.session.commit()
         print(f"Wallet for User ID {user_id}: {wallet.id} created! ")

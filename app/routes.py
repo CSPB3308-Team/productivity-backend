@@ -1,6 +1,6 @@
 from flask import Blueprint, jsonify, request
 from app import db
-from app.models import Tasks, Users, Avatar, CustomizationItems
+from app.models import Tasks, Users, Avatar, CustomizationItems, Wallets, Transactions
 from app.util import sign_token, verify_token  # custom util import for auth
 
 main = Blueprint("main", __name__)
@@ -357,10 +357,165 @@ def delete_user():
     # Delete user's avatar
     Avatar.query.filter_by(user_id=user_id).delete()
 
-    # TO DO : Delete user's items once transaction table is complete
+    # Delete user's items once transaction table is complete
+    Transactions.query.filter_by(user_id=user_id).delete()
 
     # Delete user, if valid
     db.session.delete(user)
     db.session.commit()
 
     return jsonify({"message": "User deleted successfully"}), 200
+
+#### ITEM ROUTES #####
+@main.route("/items", methods=["GET"])
+def get_items():
+    """Returns all items, with an 'owned' flag if user_id is provided"""
+
+    # Optional route params
+    user_id = request.args.get("user_id", type=int)
+
+    # Get all items
+    items = db.session.query(CustomizationItems).all()
+
+    # If user_id is provided, fetch item_ids the user owns via transactions
+    owned_item_ids = set()
+    if user_id:
+        owned_item_ids = {
+            row.item_id for row in db.session.query(Transactions.item_id).filter_by(user_id=user_id).all()
+        }
+
+    return jsonify([
+        {
+            "id": item.id,
+            "item_type": item.item_type,
+            "name": item.name,
+            "item_cost": item.item_cost,
+            "model_key": item.model_key,
+            **({"owned": item.id in owned_item_ids} if user_id else {}) # this will only show up if user_id is passed
+        }
+        for item in items
+    ])
+
+# Log a Transaction
+@main.route("/items", methods=["POST"])
+def post_transaction():
+    """Logs a transaction to the transactions table"""
+    # First check that its an authorized user
+    token = verify_token()
+    if not token:
+        return jsonify({"error": "Unauthorized or invalid token"}), 401
+    
+    data = request.json
+    required_fields = ["user_id", "item_id"]
+
+    # Check to make sure everything is provided
+    for field in required_fields:
+        if field not in data:
+            return jsonify({"error": f"Missing required field: {field}"}), 400 # missing info
+
+    # Extract data
+    user_id = data["user_id"]
+    item_id = data["item_id"]
+
+    # See if they already have this item
+    transaction = Transactions.query.filter_by(user_id=user_id,item_id=item_id).first()
+
+    # Log if doesn't exist, or return
+    if not transaction:
+        item_to_purchase = CustomizationItems.query.filter_by(id=item_id).first()
+        # Verify that item, user and wallet all exist
+        if not item_to_purchase:
+            return jsonify({"error": "Item not found"}), 400
+
+        user = Users.query.filter_by(id = user_id).first()
+        if not user:
+            return jsonify({"error": "User not found"}), 400
+        
+        wallet = Wallets.query.filter_by(user_id = user_id).first()
+        if not wallet:
+            return jsonify({"error": "Wallet not found"}), 400
+        
+        # Verify that user has enough balance to cover the purchase
+        balance = wallet.balance
+        if item_to_purchase.item_cost > balance:
+            return jsonify({"error": "Insufficient funds"}), 400
+        
+        # Deduct cost of item from user wallet, update that in db
+        wallet.balance -= item_to_purchase.item_cost
+        db.session.add(wallet)
+        print(f"Wallet {wallet.id} transaction: Prev Balance: {balance} - {item_to_purchase.item_cost} = {wallet.balance}")
+
+        # Log transaction to db
+        transaction = Transactions(user_id = user_id, item_id = item_id)
+        db.session.add(transaction)
+        db.session.commit()
+        print(f"Transaction '{transaction.id}: {transaction.user_id} owns {transaction.item_id}' logged!")
+
+        # Return the item info
+        return jsonify({
+            "message": "Purchase successful",
+            "item_id": item_to_purchase.id,
+            "item_name": item_to_purchase.name,
+            "remaining_balance": wallet.balance
+        }), 201
+    else:
+        return jsonify({"message": "Item already owned."}), 200
+
+
+@main.route("/balance", methods=["GET"])
+def get_balance():
+    """Returns a user's balance"""
+    # Check token, grab user_id from that
+    token = verify_token()
+    if not token:
+        return jsonify({"error": "Unauthorized or invalid token"}), 401
+    # User Id from token, no need for params
+    user_id = token['id']
+
+    # Get balance
+    wallet = Wallets.query.filter_by(user_id=user_id).first()
+    if wallet:
+        return jsonify({"balance": wallet.balance}), 200
+    else:
+        return jsonify({"error": "Wallet not found for user."}), 404
+
+#### WALLET ROUTES ##### 
+@main.route("/balance", methods=["POST"])
+def post_balance():
+    """Increases/decreases a user's balance"""
+    data = request.json
+    # We just need an amount to +/-
+    required_fields = ["amount"]
+
+    # Check to make sure everything is provided
+    '''
+        This is the required info, will use defaults for the others: 
+        {
+            "amount": 123456 (or -12345)
+        }
+    '''
+    for field in required_fields:
+        if field not in data:
+            return jsonify({"error": f"Missing required field: {field}"}), 400 # bad request
+
+    # Check token, grab user_id from that
+    token = verify_token()
+    if not token:
+        return jsonify({"error": "Unauthorized or invalid token"}), 401
+    # User Id from token, no need for params
+    user_id = token.get("id")
+
+    # Get balance
+    wallet = Wallets.query.filter_by(user_id=user_id).first()
+    if wallet:
+        # Modify balanace
+        old_balance = wallet.balance
+        wallet.balance += data["amount"]
+        if wallet.balance < 0:
+            return jsonify({"error": f"Cannot deduct balance below 0. Current Balance: {old_balance} | Amount: {data['amount']}"}), 400
+        db.session.add(wallet)
+        db.session.commit()
+        return jsonify({"balance": wallet.balance}), 200
+    else:
+        return jsonify({"error": "Wallet not found for user."}), 404
+
