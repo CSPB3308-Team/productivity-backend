@@ -242,12 +242,24 @@ def signup():
     user = Users.query.filter_by(email=email).first()
     # Create or return conflict
     if not user:
+        # Create the User
         user = Users(username=username, email=email, first_name=first_name, last_name=last_name)
         user.set_password(password)
         # Add it
         db.session.add(user)
         db.session.commit()
         print(f"User '{username}' created!")
+        # Avatar
+        # Get default items
+        default_skin = CustomizationItems.query.filter_by(name='Default Skin').first()
+        default_shirt = CustomizationItems.query.filter_by(name='White Shirt').first()
+        default_shoes = CustomizationItems.query.filter_by(name='Black Shoes').first()
+        # Create a default avatar for the User
+        avatar = Avatar(user_id = user.id, avatar_name = f"{user.username}'s Avatar", skin_id = default_skin.id, shirt_id = default_shirt.id, shoes_id=default_shoes.id )
+        # Add it
+        db.session.add(avatar)
+        db.session.commit()
+        print(f"Avatar '{avatar.avatar_name}' created!")
     else:
         # Conflict message
         print(f"User '{email}' already exists.")
