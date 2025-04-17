@@ -48,21 +48,31 @@ clean:
 	@echo "Removing your docker backend stack and cleaning images..."
 	$(DOCKER_COMPOSE) down --remove-orphans --rmi all -v
 
-# Start Flask in development mode (debug + hot reload)
-dev:
-	@echo "Setting environment to development"
-	sed -i.bak 's/FLASK_ENV=.*/FLASK_ENV=development/' .env
-	$(DOCKER_COMPOSE) up -d --build
+# Switch to local (bare metal Flask)
+# Run Flask bare-metal, no Docker
+local:
+	@echo "⚙️ Switching to LOCAL mode (Flask on host)"
+	sed -i.bak 's/^APP_ENV=.*/APP_ENV=local/' .env
+	sed -i.bak 's/^FLASK_ENV=.*/FLASK_ENV=development/' .env
+	flask --app app run --debug
 
-# Start Flask in production mode (just runs, no debug/reload)
+# Run Docker dev with db + pgadmin (from custom override)
+docker:
+	@echo "🐳 Switching to DOCKER mode (Compose with db/pgadmin)"
+	sed -i.bak 's/^APP_ENV=.*/APP_ENV=docker/' .env
+	sed -i.bak 's/^FLASK_ENV=.*/FLASK_ENV=development/' .env
+	docker-compose -f docker-compose.yml -f docker-compose.dev.yml up -d --build
+
+# Run production container locally (backend only)
 prod:
-	@echo "Starting production environment..."
+	@echo "🚀 Switching to PRODUCTION mode (Compose, no db/pgadmin)"
+	sed -i.bak 's/^APP_ENV=.*/APP_ENV=production/' .env
+	sed -i.bak 's/^FLASK_ENV=.*/FLASK_ENV=production/' .env
 	docker-compose -f docker-compose.yml up -d --build
-
+	
 prod-down:
-	@echo "Shutting down production environment..."
+	@echo "🧼 Shutting down PRODUCTION containers (Compose only)"
 	docker-compose -f docker-compose.yml down
-
 
 # Enter Flask shell
 shell:

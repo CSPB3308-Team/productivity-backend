@@ -12,25 +12,15 @@ services:
       - DOCKER=1
       - PYTHONUNBUFFERED=1
       - FLASK_ENV=${FLASK_ENV}
+      - APP_ENV=${APP_ENV}
+      - DATABASE_URL=${DATABASE_URL}
+      - SECRET_KEY=${SECRET_KEY}
     command: >
       sh -c "if [ \"$FLASK_ENV\" = 'development' ]; then
               flask run --host=0.0.0.0 --port=3308 --debug;
             else
               flask db upgrade && python -m app.seed && gunicorn -b 0.0.0.0:${PORT:-3308} 'app:create_app()';
             fi"
-
-
-
-  db:
-    container_name: postgresql_db
-    image: postgres:alpine
-    restart: always
-    env_file:
-      - .env
-    ports:
-      - "5432:5432"
-    volumes:
-      - pg_data:/var/lib/postgresql/data
 
 volumes:
   pg_data:

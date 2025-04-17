@@ -18,18 +18,17 @@ def create_app():
     # Read environment flag (default to "local" if not set)
     app_env = os.getenv("APP_ENV", "local").lower()
 
-     # Switch between docker, testing, and local machine
-    if app_env == "docker":
-        database_url = os.getenv("DOCKER_DATABASE_URL", "postgresql://postgres:password@db:5432/postgres")
-    elif app_env == "production":
+    if app_env == "production":
         database_url = os.getenv("DATABASE_URL")
-        app.config["SESSION_COOKIE_SECURE"] = True
-        app.config["PREFERRED_URL_SCHEME"] = "https"
-        app.config["SECRET_KEY"] = os.getenv("SECRET_KEY", "fallback-prod-secret")
-    elif app_env == "testing":  # Use SQLite in-memory for testing
-        database_url = "sqlite:///:memory:"
-    else:
-        database_url = os.getenv("LOCAL_DATABASE_URL", "postgresql://postgres:password@localhost:5432/taskagotchi")
+        if not database_url:
+            raise RuntimeError("DATABASE_URL is required in production")
+    elif app_env == "docker":
+        database_url = os.getenv("DOCKER_DATABASE_URL")
+    else:  # local
+        database_url = os.getenv("LOCAL_DATABASE_URL")
+
+    app.config["SQLALCHEMY_DATABASE_URI"] = database_url
+    app.config["SECRET_KEY"] = os.getenv("SECRET_KEY", "dev-secret")
 
     # Load database config
     app.config["SQLALCHEMY_DATABASE_URI"] = database_url
