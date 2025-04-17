@@ -13,11 +13,19 @@ services:
       - PYTHONUNBUFFERED=1
       - FLASK_ENV=${FLASK_ENV}
     command: >
-      sh -c "if [ \"$FLASK_ENV\" = 'development' ]; then
-              flask run --host=0.0.0.0 --port=3308 --debug;
-            else
-              flask db upgrade && python -m app.seed && gunicorn -b 0.0.0.0:3308 'app:create_app()';
-            fi"
+      sh -c "set -e;
+        if [ \"$FLASK_ENV\" = 'development' ]; then
+          echo '🚧 Development mode: starting Flask dev server';
+          flask run --host=0.0.0.0 --port=3308 --debug;
+        else
+          echo '🔧 Production mode: running migrations';
+          flask db upgrade;
+          echo '🌱 Seeding database...';
+          python -m app.seed;
+          echo '🚀 Starting Gunicorn';
+          gunicorn -b 0.0.0.0:3308 'app:create_app()';
+        fi"
+
 
 
   db:
