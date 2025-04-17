@@ -203,14 +203,14 @@ def delete_task():
 def get_streak():
     """Returns the current task completion streak in days"""
 
-    # Step 1: Auth
+    # Get auth token
     token = verify_token()
     if not token:
         return jsonify({"error": "Unauthorized or invalid token"}), 401
 
     user_id = token.get("id")
 
-    # Step 2: Get all completed tasks for user
+    # Get all tasks by user, that are complete, ordered by created date
     completed_tasks = (
         Tasks.query
         .filter_by(user_id=user_id, task_complete=True)
