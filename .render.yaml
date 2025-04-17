@@ -1,0 +1,2 @@
+# This tells Render to use the docker-compose for everything
+services: []
