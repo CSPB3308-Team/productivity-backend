@@ -1,9 +1,10 @@
 import jwt
 from datetime import datetime, timedelta, timezone
 from flask import request
+import os
 
 # Secret key for signing tokens
-SECRET_KEY = "mysecretssshhhhhhh"
+SECRET_KEY = os.getenv("SECRET_KEY", "dev-secret-key")
 EXPIRATION_HOURS = 4
 
 # Returns a signed token when a user logs in

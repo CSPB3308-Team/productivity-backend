@@ -56,9 +56,13 @@ dev:
 
 # Start Flask in production mode (just runs, no debug/reload)
 prod:
-	@echo "Setting environment to production"
-	sed -i.bak 's/FLASK_ENV=.*/FLASK_ENV=production/' .env
-	$(DOCKER_COMPOSE) up -d --build
+	@echo "Starting production environment..."
+	docker-compose -f docker-compose.yml up -d --build
+
+prod-down:
+	@echo "Shutting down production environment..."
+	docker-compose -f docker-compose.yml down
+
 
 # Enter Flask shell
 shell:

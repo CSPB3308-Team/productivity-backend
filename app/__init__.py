@@ -21,6 +21,11 @@ def create_app():
      # Switch between docker, testing, and local machine
     if app_env == "docker":
         database_url = os.getenv("DOCKER_DATABASE_URL", "postgresql://postgres:password@db:5432/postgres")
+    elif app_env == "production":
+        database_url = os.getenv("DATABASE_URL")
+        app.config["SESSION_COOKIE_SECURE"] = True
+        app.config["PREFERRED_URL_SCHEME"] = "https"
+        app.config["SECRET_KEY"] = os.getenv("SECRET_KEY", "fallback-prod-secret")
     elif app_env == "testing":  # Use SQLite in-memory for testing
         database_url = "sqlite:///:memory:"
     else:

@@ -11,15 +11,14 @@ services:
     environment:
       - DOCKER=1
       - PYTHONUNBUFFERED=1
-      - FLASK_ENV=${FLASK_ENV}  # Ensure the container knows its mode (dev / production)
-# TO DO - fix the 'production' switch so that it works with production WSGI server
+      - FLASK_ENV=${FLASK_ENV}
     command: >
       sh -c "if [ \"$FLASK_ENV\" = 'development' ]; then
               flask run --host=0.0.0.0 --port=3308 --debug;
             else
-              flask run --host=0.0.0.0 --port=3308;
+              gunicorn -b 0.0.0.0:3308 'app:create_app()';
             fi"
-# This is our postgres database, the actual db
+
   db:
     container_name: postgresql_db
     image: postgres:alpine
@@ -30,15 +29,6 @@ services:
       - "5432:5432"
     volumes:
       - pg_data:/var/lib/postgresql/data
-# This is our pgadmin instance for GUI db mgmt
-  pgadmin:
-    container_name: pgadmin
-    image: dpage/pgadmin4
-    restart: always
-    env_file:
-      - .env
-    ports:
-      - "8080:80"
 
 volumes:
   pg_data:

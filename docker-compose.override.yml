@@ -1,0 +1,10 @@
+# This is an override to attach pgAdmin as expected for our local development docker stack
+services:
+  pgadmin:
+    container_name: pgadmin
+    image: dpage/pgadmin4
+    restart: always
+    env_file:
+      - .env
+    ports:
+      - "8080:80"
