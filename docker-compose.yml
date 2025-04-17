@@ -16,8 +16,9 @@ services:
       sh -c "if [ \"$FLASK_ENV\" = 'development' ]; then
               flask run --host=0.0.0.0 --port=3308 --debug;
             else
-              gunicorn -b 0.0.0.0:3308 'app:create_app()';
+              flask db upgrade && python -m app.seed && gunicorn -b 0.0.0.0:3308 'app:create_app()';
             fi"
+
 
   db:
     container_name: postgresql_db
