@@ -299,6 +299,14 @@ def signup():
         db.session.add(avatar)
         db.session.commit()
         print(f"Avatar '{avatar.avatar_name}' created!")
+
+        # Create Wallet
+        wallet = Wallets.query.filter_by(user_id = user.id).first()
+        if not wallet:
+            wallet = Wallets(user_id = user.id)
+            db.session.add(wallet)
+            db.session.commit()
+            print(f"Wallet {wallet.id} created for {user.email}!")
     else:
         # Conflict message
         print(f"User '{email}' already exists.")
