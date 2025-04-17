@@ -10,6 +10,3 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 
 EXPOSE 3308
-
-# Use FLASK_ENV to determine whether to run in debug mode
-CMD ["flask", "run", "--host=0.0.0.0", "--port=3308"]
