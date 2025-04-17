@@ -2,6 +2,7 @@ from flask import Blueprint, jsonify, request
 from app import db
 from app.models import Tasks, Users, Avatar, CustomizationItems, Wallets, Transactions
 from app.util import sign_token, verify_token  # custom util import for auth
+from datetime import datetime, timedelta, timezone
 
 main = Blueprint("main", __name__)
 # Test route, should just see the message and get a log
@@ -39,6 +40,9 @@ def get_tasks():
         query = query.filter(Tasks.task_complete == task_complete)
     if task_type:
         query = query.filter(Tasks.task_type == task_type)
+
+    # Ending soonest are higher up
+    query = query.order_by(Tasks.due_date.asc())
 
     # Fetch results after filters
     tasks = query.all()
@@ -194,6 +198,41 @@ def delete_task():
     db.session.commit()
 
     return jsonify({"message": "Task deleted successfully"}), 200  # OK
+
+@main.route("/streak", methods=["GET"])
+def get_streak():
+    """Returns the current task completion streak in days"""
+
+    # Step 1: Auth
+    token = verify_token()
+    if not token:
+        return jsonify({"error": "Unauthorized or invalid token"}), 401
+
+    user_id = token.get("id")
+
+    # Step 2: Get all completed tasks for user
+    completed_tasks = (
+        Tasks.query
+        .filter_by(user_id=user_id, task_complete=True)
+        .with_entities(Tasks.created_date)
+        .order_by(Tasks.created_date.desc())
+        .all()
+    )
+
+    completed_dates = {dt.created_date.date() for dt in completed_tasks}
+
+    streak = 0
+    today = datetime.now(timezone.utc).date()
+
+    while today in completed_dates:
+        streak += 1
+        today -= timedelta(days=1)
+
+    return jsonify({
+        "streak_days": streak
+    }), 200
+
+    
 
 #### USER ROUTES #####
 # Login
@@ -461,7 +500,7 @@ def post_transaction():
     else:
         return jsonify({"message": "Item already owned."}), 200
 
-
+#### WALLET ROUTES ##### 
 @main.route("/balance", methods=["GET"])
 def get_balance():
     """Returns a user's balance"""
@@ -479,7 +518,6 @@ def get_balance():
     else:
         return jsonify({"error": "Wallet not found for user."}), 404
 
-#### WALLET ROUTES ##### 
 @main.route("/balance", methods=["POST"])
 def post_balance():
     """Increases/decreases a user's balance"""

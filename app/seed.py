@@ -60,6 +60,33 @@ def seed_tasks(user):
     else:
         print(f"Tasks for {user.username} already exist.")
 
+# Seeds a streak to Users
+def seed_streaks(user, number):
+    existing_streak = Tasks.query.filter_by(user_id=user.id, task_name="Get out of bed").first()
+    if not existing_streak:
+        # Get current data, empty arr
+        now_utc = datetime.now(timezone.utc)
+        streak_tasks = []
+        # Just iterate through and append different tasks each a day out
+        for i in range(number):
+            task_day = now_utc - timedelta(days=i)
+            streak_tasks.append(
+                Tasks(
+                    user_id=user.id,
+                    task_name="Get out of bed",
+                    created_date=task_day,
+                    due_date=task_day,
+                    task_renewed=False,
+                    task_complete=True,
+                    task_type="daily"
+                )
+            )
+        db.session.add_all(streak_tasks)
+        db.session.commit()
+        print(f"Seeded {number}-day streak for user {user.username}")
+    else:
+        print(f"Streak tasks already exist for user {user.username}")
+        
 # Seeds some default items
 def seed_items(item_type, name, model_key, item_cost):
     item = CustomizationItems.query.filter_by(name=name).first()
@@ -100,6 +127,11 @@ with app.app_context():
     seed_tasks(user1)
     seed_tasks(user2)
     seed_tasks(user3)
+
+    # Seed Streaks
+    seed_streaks(user1, 7)
+    seed_streaks(user2, 10)
+    seed_streaks(user1, 3)
 
     # Seed the Items
     # Seed Shirts
