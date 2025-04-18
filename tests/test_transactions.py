@@ -2,20 +2,18 @@ import unittest
 from sqlalchemy import text
 from app import create_app, db
 from app.models import Users, CustomizationItems, Transactions
-from flask_testing import TestCase
 
-class TestTransactionsModel(TestCase):
-    def create_app(self):
-        app = create_app()
-        app.config['TESTING'] = True
-        app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
-        app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-        return app
-
+class TestTransactionsModel(unittest.TestCase):
     def setUp(self):
-        db.create_all()
+        self.app = create_app()
+        self.app.config['TESTING'] = True
+        self.app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
+        self.app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+        self.app_context = self.app.app_context()
+        self.app_context.push()
+        self.client = self.app.test_client()
 
-        # Enable SQLite foreign key constraints
+        db.create_all()
         db.session.execute(text('PRAGMA foreign_keys = ON'))
 
         self.user = Users(
@@ -40,6 +38,7 @@ class TestTransactionsModel(TestCase):
     def tearDown(self):
         db.session.remove()
         db.drop_all()
+        self.app_context.pop()
 
     def test_create_transaction(self):
         txn = Transactions(user_id=self.user.id, item_id=self.item.id)
@@ -81,3 +80,4 @@ class TestTransactionsModel(TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
