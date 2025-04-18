@@ -95,7 +95,7 @@ class Wallets(db.Model):
     )
 
     # Relationship to Users model
-    user = relationship('Users', backref=db.backref('wallet', uselist=False, lazy=True))
+    user = relationship('Users', backref=db.backref('wallet', lazy=True))
 
     def __repr__(self):
         return f"<Wallet {self.id} for {self.user_id}>"

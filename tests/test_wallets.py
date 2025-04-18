@@ -55,7 +55,8 @@ class TestWalletsModel(TestCase):
         db.session.add(wallet)
         db.session.commit()
 
-        self.assertEqual(self.user.wallet.balance, 50)
+        self.assertEqual(len(self.user.wallet), 1)  # List with one element
+        self.assertEqual(self.user.wallet[0].balance, 50)
 
     def test_user_wallet_uniqueness(self):
         wallet1 = Wallets(user_id=self.user.id, balance=100)
@@ -64,6 +65,7 @@ class TestWalletsModel(TestCase):
         db.session.add(wallet2)
         with self.assertRaises(Exception):
             db.session.commit()
+
 
 if __name__ == '__main__':
     unittest.main()
