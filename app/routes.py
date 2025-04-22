@@ -55,6 +55,7 @@ def get_tasks():
             "task_name": task.task_name,
             "created_date": task.created_date.isoformat(),
             "due_date": task.due_date.isoformat() if task.due_date else None,
+            "completed_date": task.completed_date.isoformat() if task.completed_date else None,
             "task_renewed": task.task_renewed,
             "task_complete": task.task_complete,
             "task_type": task.task_type
