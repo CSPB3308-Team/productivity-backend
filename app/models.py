@@ -33,6 +33,7 @@ class Tasks(db.Model):
     task_name = db.Column(db.String(255), nullable=False)
     created_date = db.Column(db.DateTime, default=datetime.now(timezone.utc), nullable=False)
     due_date = db.Column(db.DateTime, nullable=True)
+    completed_date = db.Column(db.DateTime, nullable=True)
     task_renewed = db.Column(db.Boolean, default=False)
     task_complete = db.Column(db.Boolean, default=False)
 

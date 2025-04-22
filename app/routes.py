@@ -88,6 +88,7 @@ def create_task():
     task_name = data["task_name"]
     task_type = data["task_type"]
     due_date = data.get("due_date")
+    completed_date = data.get("completed_date", None)
     task_renewed = data.get("task_renewed", False)  # default = false
     task_complete = data.get("task_complete", False)  # default = False
 
@@ -102,6 +103,7 @@ def create_task():
         task_name=task_name,
         task_type=task_type,
         due_date=due_date,
+        completed_date=completed_date,
         task_renewed=task_renewed,
         task_complete=task_complete
     )
@@ -119,6 +121,7 @@ def create_task():
             "task_name": new_task.task_name,
             "created_date": new_task.created_date.isoformat(),
             "due_date": new_task.due_date.isoformat() if new_task.due_date else None,
+            "completed_date": new_task.completed_date.isoformat() if new_task.completed_date else None,
             "task_renewed": new_task.task_renewed,
             "task_complete": new_task.task_complete,
             "task_type": new_task.task_type
@@ -151,6 +154,8 @@ def update_task():
         task.task_type = data["task_type"]
     if "due_date" in data:
         task.due_date = data["due_date"]
+    if "completed_date" in data:
+        task.completed_date = data["completed_date"]
     if "task_renewed" in data:
         task.task_renewed = data["task_renewed"]
     if "task_complete" in data:
@@ -168,6 +173,7 @@ def update_task():
             "task_name": task.task_name,
             "created_date": task.created_date.isoformat(),
             "due_date": task.due_date.isoformat() if task.due_date else None,
+            "completed_date": task.completed_date.isoformat() if task.completed_date else None,
             "task_renewed": task.task_renewed,
             "task_complete": task.task_complete,
             "task_type": task.task_type
